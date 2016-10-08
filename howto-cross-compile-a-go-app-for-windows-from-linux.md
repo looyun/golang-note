@@ -1,4 +1,4 @@
----title: 如何在linux上将GO应用跨平台编译到windows---
+
 起因：我在linux下将一个应用编译为windows应用时调用了sqlite3,出现了以下问题：
 >C source files not allowed when not using cgo or SWIG: sqlite3-binding.c
 
