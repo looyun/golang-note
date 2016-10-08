@@ -1,6 +1,4 @@
 
-## title: Golang ubantu下环境配置和GoSublime配置
-
 从[http:\/\/www.golangtc.com\/download](http://www.golangtc.com/download) 下载包解压至\/usr\/local或$home
 
 ```bash
