@@ -20,20 +20,75 @@
 1a.(推荐，可选) 添加`export PATH="$PATH:$GOROOT/bin"`到你的` ~/.bashrc`(或者你的其他的shell的文件)
 
 ## 2.编译你的本地工具链
-```cd $GOROOT/src$ ./make.bashInstalled Go for linux/amd64 in /usr/src/go-releaseInstalled commands in /usr/src/go-release/bin```
+
+```
+cd $GOROOT/src
+$ ./make.bash
+.....
+Installed Go for linux/amd64 in /usr/src/go-release
+Installed commands in /usr/src/go-release/bin
+
+```
 ## 3.不用CGO编译编译你的windows工具链
-```cd $GOROOT/src$ env GOOS=windows GOARCH=386 ./make.bash --no-clean.....Installed Go for windows/386 in /usr/src/go-releaseInstalled commands in /usr/src/go-release/bin```如果你想构建64位二进制文件的话用 `GOARCH=amd64`
+```
+cd $GOROOT/src
+$ env GOOS=windows GOARCH=386 ./make.bash --no-clean
+.....
+Installed Go for windows/386 in /usr/src/go-release
+Installed commands in /usr/src/go-release/bin
+```
+
+如果你想构建64位二进制文件的话用 `GOARCH=amd64`
 ## 4.用CGO编译windows工具链
 * 安装`mingw-w64-gcc`
 
+```
+sudo pacman -S mingw-w64-gcc
+.....
+(1/1) installing mingw-w64-gcc
+```
+```
+cd $GOROOT/src
+$ env CGO_ENABLED=1 GOOS=windows GOARCH=386 CC_FOR_TARGET="i686-w64-mingw32-gcc -fno-stack-protector -D_FORTIFY_SOURCE=0 -lssp" ./make.bash --no-clean
+......
+Installed Go for windows/386 in /usr/src/go-release
+Installed commands in /usr/src/go-release/bin
+```
+如果你想构建64位二进制文件的话用 `GOARCH=amd64 CC_FOR_TARGET="x86_64-w64-mingw32-gcc ....`
+*note*：如果BUG被修复，你可以将 `-fno-stack-protector -D_FORTIFY_SOURCE=0 -lssp` 从 `CC_FOR_TARGET`移除.
+# 实际编译代码使其运行在windows上
+我们用跟之前一样的环境变量，除了将`CC_FOR_TARGET`换成`CC`
+## 代码：
 
-```sudo pacman -S mingw-w64-gcc.....(1/1) installing mingw-w64-gcc```
-```cd $GOROOT/src$ env CGO_ENABLED=1 GOOS=windows GOARCH=386 CC_FOR_TARGET="i686-w64-mingw32-gcc -fno-stack-protector -D_FORTIFY_SOURCE=0 -lssp" ./make.bash --no-clean......Installed Go for windows/386 in /usr/src/go-releaseInstalled commands in /usr/src/go-release/bin```如果你想构建64位二进制文件的话用 `GOARCH=amd64 CC_FOR_TARGET="x86_64-w64-mingw32-gcc ....`*note*：如果BUG被修复，你可以将 `-fno-stack-protector -D_FORTIFY_SOURCE=0 -lssp` 从 `CC_FOR_TARGET`移除.# 实际编译代码使其运行在windows上我们用跟之前一样的环境变量，除了将`CC_FOR_TARGET`换成`CC`## 代码：
+```
+package main
 
-```package main
-
-/*static int answerToLife() { return 42;}*/import "C"
+/*
+static int answerToLife() {
+	return 42;
+}
+*/
+import "C"
 
 import "fmt"
 
-func main() { fmt.Println("the answer to life is", C.answerToLife())}```## 测试：```$ env CGO_ENABLED=1 GOOS=windows GOARCH=386 CC="i686-w64-mingw32-gcc -fno-stack-protector -D_FORTIFY_SOURCE=0 -lssp" go build -o test32.exe$ file test32.exe test32.exe: PE32 executable (console) Intel 80386 (stripped to external PDB), for MS Windows # or build it as a GUI application so Windows won't open up a console window. $ env CGO_ENABLED=1 GOOS=windows GOARCH=386 CC="i686-w64-mingw32-gcc -fno-stack-protector -D_FORTIFY_SOURCE=0 -lssp" go build -ldflags -H=windowsgui -o test32.exe$ file test32.exetest32.exe: PE32 executable (GUI) Intel 80386 (stripped to external PDB), for MS Windows $ wine test32.exethe answer to life is 42```*note:*接下来要用CGO构建本地GO应用的话需要用到`env CC=gcc go build`
+func main() {
+	fmt.Println("the answer to life is", C.answerToLife())
+}
+```
+## 测试：
+```
+$ env CGO_ENABLED=1 GOOS=windows GOARCH=386 CC="i686-w64-mingw32-gcc -fno-stack-protector -D_FORTIFY_SOURCE=0 -lssp" go build -o test32.exe
+$ file test32.exe 
+test32.exe: PE32 executable (console) Intel 80386 (stripped to external PDB), for MS Windows
+ 
+# or build it as a GUI application so Windows won't open up a console window.
+ 
+$ env CGO_ENABLED=1 GOOS=windows GOARCH=386 CC="i686-w64-mingw32-gcc -fno-stack-protector -D_FORTIFY_SOURCE=0 -lssp" go build -ldflags -H=windowsgui -o test32.exe
+$ file test32.exe
+test32.exe: PE32 executable (GUI) Intel 80386 (stripped to external PDB), for MS Windows
+ 
+$ wine test32.exe
+the answer to life is 42
+```
+*note:*接下来要用CGO构建本地GO应用的话需要用到`env CC=gcc go build`
